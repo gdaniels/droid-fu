@@ -235,8 +235,10 @@ public class WebImageView extends ViewSwitcher {
 
         @Override
         protected boolean handleImageLoaded(Bitmap bitmap, Message msg) {
-            bitmap = processor.process(bitmap);
-
+            if (processor != null) {
+                bitmap = processor.process(bitmap);
+            }
+            
             boolean wasUpdated = super.handleImageLoaded(bitmap, msg);
             if (wasUpdated) {
                 isLoaded = true;
