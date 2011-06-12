@@ -30,6 +30,7 @@ import android.widget.ImageView.ScaleType;
 import com.github.droidfu.DroidFu;
 import com.github.droidfu.imageloader.ImageLoader;
 import com.github.droidfu.imageloader.ImageLoaderHandler;
+import com.github.droidfu.imageloader.PostProcessor;
 
 /**
  * An image view that fetches its image off the web using the supplied URL. While the image is being
@@ -182,11 +183,15 @@ public class WebImageView extends ViewSwitcher {
      * Use this method to trigger the image download if you had previously set autoLoad to false.
      */
     public void loadImage() {
+        loadImage(null);
+    }
+
+    public void loadImage(PostProcessor processor) {
         if (imageUrl == null) {
             throw new IllegalStateException(
                     "image URL is null; did you forget to set it for this view?");
         }
-        ImageLoader.start(imageUrl, new DefaultImageLoaderHandler());
+        ImageLoader.start(imageUrl, new DefaultImageLoaderHandler(processor));
     }
 
     public boolean isLoaded() {
@@ -217,13 +222,21 @@ public class WebImageView extends ViewSwitcher {
     }
 
     private class DefaultImageLoaderHandler extends ImageLoaderHandler {
+        PostProcessor processor = null;
 
         public DefaultImageLoaderHandler() {
             super(imageView, imageUrl, errorDrawable);
         }
 
+        public DefaultImageLoaderHandler(PostProcessor processor) {
+            this();
+            this.processor = processor;
+        }
+
         @Override
         protected boolean handleImageLoaded(Bitmap bitmap, Message msg) {
+            bitmap = processor.process(bitmap);
+
             boolean wasUpdated = super.handleImageLoaded(bitmap, msg);
             if (wasUpdated) {
                 isLoaded = true;
@@ -240,4 +253,13 @@ public class WebImageView extends ViewSwitcher {
 	public String getImageUrl() {
 		return imageUrl;
 	}
+
+    /**
+     * Use this to control the {@link ScaleType} of the embedded ImageView
+     * @param scaleType The desired scaling mode
+     */
+    public void setScaleType(ScaleType scaleType) {
+        this.scaleType = scaleType;
+        imageView.setScaleType(scaleType);
+    }
 }
